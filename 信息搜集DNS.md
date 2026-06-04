@@ -1,4 +1,4 @@
-##### 被动
+
 ###### DNS枚举
 DNS层级系统是一个巨大的分布型数据库，是实现攻击面扩展的高价值目标
 对应DNS记录的信息有：
@@ -103,3 +103,75 @@ Host proxy.megacorpone.com not found: 3(NXDOMAIN)
 router.megacorpone.com has address 198.18.0.64
 
 ```
+
+###### DNS枚举工具
+```
+//使用标准枚举方式
+┌──(kali㉿kali)-[~]
+└─$ dnsrecon -d megacorpone.com -t std              
+2026-06-04T08:18:28.940422-0400 INFO Starting enumeration for domain: megacorpone.com
+2026-06-04T08:18:28.941813-0400 INFO std: Performing General Enumeration against: megacorpone.com...
+2026-06-04T08:18:29.389453-0400 ERROR No answer for DNSSEC query for megacorpone.com
+2026-06-04T08:18:29.787083-0400 INFO     SOA ns1.megacorpone.com 198.18.0.12
+2026-06-04T08:18:30.229897-0400 INFO     NS ns3.megacorpone.com 198.18.0.13
+2026-06-04T08:18:30.296205-0400 ERROR    Recursion enabled on NS Server 198.18.0.13
+2026-06-04T08:18:30.320053-0400 INFO     NS ns1.megacorpone.com 198.18.0.12
+2026-06-04T08:18:30.324892-0400 ERROR    Recursion enabled on NS Server 198.18.0.12
+2026-06-04T08:18:30.504839-0400 INFO     NS ns2.megacorpone.com 198.18.0.14
+2026-06-04T08:18:30.508758-0400 ERROR    Recursion enabled on NS Server 198.18.0.14
+2026-06-04T08:18:31.264871-0400 INFO     MX mail.megacorpone.com 198.18.0.15
+2026-06-04T08:18:31.265237-0400 INFO     MX spool.mail.gandi.net 198.18.0.16
+2026-06-04T08:18:31.265528-0400 INFO     MX fb.mail.gandi.net 198.18.0.17
+2026-06-04T08:18:31.265975-0400 INFO     MX mail2.megacorpone.com 198.18.0.18
+2026-06-04T08:18:31.315993-0400 INFO     A megacorpone.com 198.18.0.19
+2026-06-04T08:18:32.179801-0400 INFO     TXT megacorpone.com Try Harder
+2026-06-04T08:18:32.180312-0400 INFO     TXT megacorpone.com google-site-verification=U7B_b0HNeBtY4qYGQZNsEYXfCJ32hMNV3GtC0wWq5pA
+2026-06-04T08:18:33.204478-0400 INFO Enumerating SRV Records
+2026-06-04T08:18:36.886499-0400 ERROR No SRV Records Found for megacorpone.com
+2026-06-04T08:18:36.887534-0400 INFO Completed enumeration for domain: megacorpone.com
+```
+```
+//使用字典进行暴力枚举
+┌──(kali㉿kali)-[~]
+└─$ dnsrecon -d megacorpone.com -D ~/list.txt -t brt
+2026-06-04T08:20:02.199407-0400 INFO Using the dictionary file: /home/kali/list.txt (provided by user)
+2026-06-04T08:20:02.199594-0400 INFO Starting enumeration for domain: megacorpone.com
+2026-06-04T08:20:02.199840-0400 INFO brt: Performing host and subdomain brute force against megacorpone.com...
+2026-06-04T08:20:02.295030-0400 INFO Do you wish to continue? [Y/n]
+Y
+2026-06-04T08:20:03.919356-0400 INFO     A ftp.megacorpone.com 198.18.0.21
+2026-06-04T08:20:03.919886-0400 INFO     A www.megacorpone.com 198.18.5.232
+2026-06-04T08:20:03.920377-0400 INFO     A mail.megacorpone.com 198.18.0.15
+2026-06-04T08:20:03.922063-0400 INFO     A router.megacorpone.com 198.18.0.64
+2026-06-04T08:20:03.923233-0400 INFO     A proxy.megacorpone.com 198.18.0.22
+2026-06-04T08:20:03.925344-0400 INFO     A owa.megacorpone.com 198.18.0.23
+2026-06-04T08:20:03.926541-0400 INFO 6 Records Found
+2026-06-04T08:20:03.926767-0400 INFO Completed enumeration for domain: megacorpone.com
+
+//或者使用dnsenum工具
+dnsenum megacorpone.com
+```
+_DNS枚举常用字典：_ **/usr/share/seclists**
+Windows枚举工具
+_LOLBAS:_  **Living Off The Land Binaries, Scripts and Libraries,利用系统的二进制库和文件，实现不上传恶意文件，不落地病毒，使用白程序干黑活。**
+基于live off the land，可以使用nslookup工具进行枚举
+```
+C:\Users\retro>nslookup mail.megacorptwo.com
+服务器:  UnKnown
+Address:  fdfe:dcba:9876::2
+
+名称:    mail.megacorptwo.com
+Address:  198.18.6.3
+
+//和linux的host命令一样
+可以指定查询的类型
+
+C:\Users\student>nslookup -type=TXT info.megacorptwo.com 192.168.50.151
+Server:  UnKnown
+Address:  192.168.50.151
+
+info.megacorptwo.com    text =
+
+        "greetings from the TXT record body"
+```
+
