@@ -1,7 +1,6 @@
 
 ###### DNS枚举
-DNS层级系统是一个巨大的分布型数据库，是实现攻击面扩展的高价值目标
-对应DNS记录的信息有：
+DNS层级系统是一个巨大的分布型数据库，是实现攻击面扩展的高价值目标，而DNS分区记录记录的信息有：
 - **NS**: Nameserver records contain the name of the authoritative servers hosting the DNS records for a domain.
 - **A**: Also known as a host record, the "_a record_" contains the IPv4 address of a hostname (such as www.megacorpone.com).
 - **AAAA**: Also known as a quad A host record, the "_aaaa record_" contains the IPv6 address of a hostname (such as www.megacorpone.com).
@@ -154,7 +153,8 @@ dnsenum megacorpone.com
 _DNS枚举常用字典：_ **/usr/share/seclists**
 Windows枚举工具
 _LOLBAS:_  **Living Off The Land Binaries, Scripts and Libraries,利用系统的二进制库和文件，实现不上传恶意文件，不落地病毒，使用白程序干黑活。**
-基于live off the land，可以使用nslookup工具进行枚举
+
+基于"live off the land"理念，可以使用nslookup工具进行枚举
 ```
 C:\Users\retro>nslookup mail.megacorptwo.com
 服务器:  UnKnown
