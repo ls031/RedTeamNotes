@@ -118,8 +118,8 @@ MAC Address: 00:0C:29:D2:6E:26 (VMware)
 ![无法访问](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-17-32-55.png)
 发现服务器不响应。访问页面源代码看一下具体原因
 ![原因检查](kali-linux-2026.1-vmware-amd64-2026-07-17-17-48-46.png)
-发现表单提交给http://localhost/wordpress/wp-login.php这个url。localhost是本地主机的意思，怪不得没返回呢。这里我猜测的原因是站长进行网站迁移，wordpress站点可能被拿掉，从而运行新的网站。而这个wp-login.php则是原始测试环境所遗留的。但是站长忘记删除这个原本自带的文件了。也有可能没有被拿掉，只是资源路径我并不知道。_(这里的表单资源提交给localhost的操作可以支持我的观点)_ 
-无论是那个路径，目前我必须知道这个web服务器更多的路径资源信息。因此我们需要进行网站目录猜测。
+发现表单提交给http://localhost/wordpress/wp-login.php这个url。localhost是本地主机的意思，怪不得没返回呢。这里我猜测的原因是站长进行网站迁移，wordpress站点可能被拿掉，从而运行新的网站。而这个wp-login.php则是原始测试环境所遗留的。但是站长忘记删除这个原本自带的文件了。也有可能没有被拿掉，只是资源路径我并不知道。_(这里的表单资源提交给localhost的操作很符合这一行为)_ 
+无论是那个路径，目前我都必须知道这个web服务器更多的路径资源信息。因此我们需要进行网站目录爆破。
 
 #### DirB 目录爆破
 ```text
@@ -243,10 +243,40 @@ DOWNLOADED: 78404 - FOUND: 22
 许多空白页面而且没有标准性图片。给人一种“匆忙删除网站，并且很粗心留了很多原始配置文件”。
 ![错误](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-20.png)
 ![泄露路径](vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_18_14.png)
-查看robots.txt内容。robots是爬虫的”君子协议“。里面记录的内容是不允许搜索引擎爬虫获取的，一般都是私密，不想让别人知道的资源链接。如果按照我之前所想，这个robots.txt文件很肯记录了新的wordpress登录站点url。可惜当我访问时，啥也没有。
+查看robots.txt内容。robots是爬虫的”君子协议“。里面记录的内容是不允许搜索引擎爬虫获取的，一般都是私密，不想让别人知道的资源链接。如果按照我之前所想的，这个robots.txt文件很肯记录了新的wordpress登录站点url。可惜当我访问时，啥也没有。
 ![爬虫协议](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-31.png)
 我感觉我这条路行不通，可能就是网址就是没了。但是，一个建站页面引起我的兴趣。
 ![建站页面](vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_10_09.png)
 可能当前网站运行的是CuppaCMS。使用searchsploit搜索一下漏洞利用
 ![漏洞利用](vulnhubScreenShot/w1r3s/2026-07-16-041325_2560x1600_scrot.png)
 使用-m参数将25971.txt文件拷贝到本地文件夹。这个漏洞能够包含本地文件和远程文件。根据利用文件，开始构造利用。
+![利用信息](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-46-02.png)
+漏洞利用点为“/alerts/alertConfigField.php?urlConfig=”，回顾之前目录爆破的结果，只有这个网址匹配的上。这里使用mousepad打开使用Ctrl F键查找“/alerts”
+![利用点查找](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-51-01.png)
+构造payload
+```text
+http://192.168.2.34:80/administrator/alerts/alertConfigField.php?urlConfig=../../../../../../../../../etc/passwd
+```
+执行有结果，但是没有返回系统信息
+![卡住了](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-55-57.png)
+这里我卡住了，我尝试了构造这个利用文件的所有payload，但是服务器依旧返回这个界面。我想要放弃这条路，但是“/alerts匹配并有回显”这个迹象告诉我，服务器上真有这个漏洞文件alertConfigField.php。我看了红笔的视频后，验证了我的思路。这里文件给出了网站CMS的源代码地址，或许需要查看一下代码细节。
+#### CuppaCMS代码审计
+searchsploit给出的源码文件地址已经找不到了。借助谷歌搜索一下历史源码信息。目前没有Cuppa版本信息。但是13年的漏洞，采用php5.3。可以排除官网上面比较新的版本。我们选择下方的GitHub版本
+![Chrome](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
+![1](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
+![github](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-10-59.png)
+
+只是按照利用文件，第22行不是’<?php include($_REQUEST["urlConfig"]); ?>‘
+![error](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-09.png)
+![origin](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-19-45.png)
+
+经过简单的审计，Cuppa CMS后面修改为POST方式提交，但是还是没有修复漏洞。
+![success](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-19.png)
+这块代码与服务器的函数特征还是比较匹配，推测这一版和服务上跑的那一版差别不大。
+![pattern](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-31-26.png)
+构造payload，使用curl工具
+```text
+curl -i --data-urlencode "urlConfig=../../../../../../../../../etc/shadow" http://192.168.2.34/administrator/alerts/alertConfigField.php
+```
+![execute](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-10.png)
+![res](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-43.png)
