@@ -285,4 +285,66 @@ curl -i --data-urlencode "urlConfig=../../../../../../../../../etc/shadow" http:
 ![webshell](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-10.png)
 没有任何回显.执行失败
 ![executeerror](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-30.png)
+看来使用文件包含执行远程webshell这个思路行不通，还是老老实实爆破密码吧！
 ### john哈希碰撞
+![破解结果](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-06-38.png)
+w1r3s用户密码先被破解出来了，此时root用户的密码还在跑。其实包括我在内，对于liunx主机登录的密码和ssh账号登录的密码，许多人会设置成一样的。这样给了我们获得立足点的口子。
+我们登录ssh。
+### 获得立足点
+使用破解的账号密码登录ssh,提示我们这是条正确的路线。下面考虑提权
+![stepstone](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-14-29.png)
+
+### 权限提升
+通过命令
+```text
+sudo -l
+```
+查看当前用户的环境，发现当前用户可以随意使用root用户权限做任何事情。
+![权限枚举](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-10-35.png)
+使用sudo运行一个root的bash会话。查看root目录下的flag.txt文件，完成！
+![loot](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-14-23.png)
+
+### 21端口ftp尝试
+目标21端口支持匿名用户登录。我们可以使用anonymous账号登录服务器下载文件。
+``` zsh
+man ftp
+```
+看了一下ftp工具手册，得到open参数用于建立远程文件服务器的链接。
+![ftp1](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_46_03.png)
+![ftp2](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_45_24.png)
+得到开放文件信息
+![inf](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-26-22.png)
+第一串字符使用工具识别后为MD5，第二串字符很像是base64编码。_(后面出现标志性\=\=, )_
+从网站上破解MD5字符串。
+![crack](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_04_24_37.png)
+![crack2](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-33-02.png)
+我获得到的信息如下
+```
+This is not a password(这个不是密码。)
+It is easy, but not that easy..(很简单，但是没那么简单..)
+```
+暗示我们这条路不通。
+看一下其他两个文件
+![text](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-38-01.png)
+第一个employee_name文件给出了员工名，而下面两行字符明显颠倒了。这里采用一些工具还原字符。
+使用google搜索
+![page1](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_14.png)
+不好用。换一个
+![page2](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_02.png)
+![page3](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_40_39.png)
+我获得信息如下
+```text
+I don't think is the way to root!(我不认为这能root)
+we have lot of work to do stop playing around...(我们还有很多要完成的工作，别闲逛了...)
+```
+这条路行不通。
+
+### 22端口ssh暴力破解
+不到万不得已，ssh破解的优先级应该是最后的。这里我们构造字典，使用hydra进行暴力破解。
+![zone](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-05-28.png)
+使用hydra的期间多次调整字典
+![hydra](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-17-49.png)
+完成。
+
+### 总结
+
