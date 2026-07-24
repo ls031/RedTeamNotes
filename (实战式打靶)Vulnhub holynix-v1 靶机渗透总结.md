@@ -265,7 +265,7 @@ MAC Address: 00:0C:29:75:B1:DE (VMware)
 	但是执行的结果是 '5566 0>&1;' 。很明显的我的“/”前面的内容被裁剪掉了。
 	我查了一下官方文档，
 
-	![[kali-linux-2026.1-vmware-amd64-2026-07-22-16-30-06.png]]
+	![google](vulnhubScreenShot/holynix-v1/kali-linux-2026.1-vmware-amd64-2026-07-22-16-30-06.png)
 	我选择的注入点 $_FILES\['uploaded'\]\['name'\] 
 	 
 	返回的是客户端上传的文件名。像上传" /home/1.jpg"这样的文件。最终文件名会保存为1.jpg，就是“/”前面的信息路径全部舍弃。我测试过程中，" /1.jpg/ "，它直接搞成“”。
