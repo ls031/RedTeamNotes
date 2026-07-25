@@ -1,4 +1,4 @@
-
+   
 # 靶机描述
 - 这是一台标榜难度为简单的靶机。作者要求我们拿下目标的 root 权限，并且读取 root 目录下面的key.txt文件。
 ![des](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-24-18-38-02.png)
@@ -221,3 +221,60 @@ MaxBucky:50484c19f1afdaf3841a0d821ed393d2(kernel)
 
 
 ## WordPress 渗透
+
+1. 登录后台页面
+	经过尝试，GeorgeMiller 用户有增加页面，修改页面的权限。
+	
+
+2. 插件可编辑功能处写 WEBSHELL
+	这里的 Plugin Editor 功能可以让用户对插件代码进行自定义的修改。我们可以插入自己的WEBSHELL 让站点运行。 
+	
+	![edit](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_11_10.png)
+	 
+	这里有 markdown.php , hello.php , textile.php 三个界面。但是只有textile.php界面给了权限修改代码。
+	
+	![edited](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_20.png)
+	
+	![php](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_35.png)
+	
+	拿到会话。
+	![session](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_13_13.png)
+
+
+# 权限提升
+
+ - 脏牛漏洞提权
+	 ![DirtyCow](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_58_14.png)
+	
+	![res](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_02_41.png)
+	 成功获得 root 权限。
+
+# 结果
+![loot](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_04_18.png)
+
+
+# 总结
+
+首先，通过 WEB 的SQL注入漏洞，获得整个站点的用户密码信息。通过 hash 碰撞，获得后台管理员用户密码。通过后台管理功能中编辑插件的功能，添加我们的反弹 shell 脚本。拿到 WEB 会话。
+使用内核提权的手段获得这台机子的高权限。
+
+1. 对于一些比较知名的 CMS或者blog 框架。网上有许多开源信息可以直接获取。不需要一板一眼的使用注入漏洞查表名。
+2. WordPress 的 wp_users 表中凭借 user_status 来判断用户的权限。用户权限越高，数字越大。
+3. WordPress 站点后台除了从插件编辑页面下手，还可以 点击 options 新增上穿页面类型 php。然后再上传一个 WEBSHELL。
+	![options](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-26-19.png)
+	
+	![upload](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-31-04.png)
+	
+	![shell](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-57.png)
+	
+	
+	![session](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-45.png)
+
+5. 使用hashcat 碰撞 HASH 值
+	```shell
+	sudo hashcat -m 0 -a 0 7cbb3252ba6b7e9c422fac5334d22054 /usr/share/wordlists/rockyou.txt 
+	```
+
+
+	![hashcat](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-14-04.png)
+
