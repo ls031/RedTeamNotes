@@ -1,7 +1,7 @@
    
 # 靶机描述
 - 这是一台标榜难度为简单的靶机。作者要求我们拿下目标的 root 权限，并且读取 root 目录下面的key.txt文件。
-![des](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-24-18-38-02.png)
+![des](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-24-18-38-02.png)
 
 # 信息收集
 
@@ -132,24 +132,24 @@ MAC Address: 00:0C:29:20:9D:9D (VMware)
 - 网页信息评估
   进入 WEB 界面后，通过点击页面 target 链接。我们得到了一个 /Hackademic_RTB1的目录。
 
-![WEB](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_45_23.png)
+![WEB](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_45_23.png)
 
 点击 no comments 链接。跳转到新页面
 
-![comments](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_45_58.png)
+![comments](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_45_58.png)
 点击 Uncategorized 链接 。跳转页面
 
-![Uncategorized](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_46_55.png)
+![Uncategorized](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_08_46_55.png)
 
 ## WEB 路径爆破
 
 - gobuster 扫描网站路径
 
-![gobuster](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-24-20-35-19.png)
+![gobuster](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-24-20-35-19.png)
 
 通过查看 readme.html 这个网站文件，可以看出这是一个 WordPress 站点。版本为 1.5.1。这个挺多漏洞的。
 
-![WordPress](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_02_05.png)
+![WordPress](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_02_05.png)
 
 # WEB 渗透
 
@@ -157,42 +157,42 @@ MAC Address: 00:0C:29:20:9D:9D (VMware)
 
 1. 确认注入点
 	  Uncategorized 链接处存在漏洞参数 cat。
-	![inject](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_06_45.png)
+	![inject](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_06_45.png)
 	我首先要知道这个网页产生 SQL 注入,报错信息回显点在哪？因为语句执行正确，只会返回网页标准内容。而当我们的拼接 SQL 注入语句成功执行。如果不知道回显点，我们就没法知道我们想要信息结果。注意这里使用 _LIMIT 1_ 来限制 SQL 语句每次只返回一行的信息。这是最简单的 SQL 报错注入，我们可以使用联合查询来获取相关信息。
 
 2. 判断列数
 
 	由于使用联合查询必须知道数据表的列数。因此我们使用 _“order by”_ 这个 payload。拼接后的语句表示从 wp_categories 按 ” cat = 2 “ 这个条件查找，并将查找后的结果按第二列进行排序。如果存在第二列语句就能执行成功。如果不存在就会返回报错结果。
 	
-	![order1](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_14_16.png)
+	![order1](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_14_16.png)
 	
-	![order2](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_14_23.png)
+	![order2](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_14_23.png)
 可以看到输入第 6 列的时候，就报错了。所以这个表有 5 列。
 
 3. 确认回显点
 	由于代码限制只能读取一行。所以我们必须让系统标准输出内容不显示，只显示我们指定部分的结果。
 	
-	![原理](vulnhubScreenShot/Hackademic.RTB1/Hackademic.RTB1-2026-07-24-16-39-07.png)
+	![原理](../vulnhubScreenShot/Hackademic.RTB1/Hackademic.RTB1-2026-07-24-16-39-07.png)
 	
 	正如这张图片所示，看第二行命令执行的结果。如果仅是简单的语句拼接，我们构造的联合查询内容会因为行数限制而不展示出来。所以必须让第一条查询语句失效。比如让 cat_ID 指向一个负值。这里的我经过前期的信息搜集，发现 cat_ID 等于 2 时，返回内容为空。因此，我采用 cat_ID = 2来逃逸行数限制。
 	
-	![version](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_23_09.png)
+	![version](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_23_09.png)
 
 	我们成功获得当时数据库的版本是 5.1.47。_(这里补充一下不一定数据库版本就是MySQL。如果在执行命令的过程中，发现报错，说" 某某参数无法识别 "，那么，我们就要考虑是否是其他数据库，比如Oracle)_
 
 4. 知道库名爆破表名
 	查找到当前库名是 wordpress
-	![wordpress](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_23_46.png)
+	![wordpress](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_23_46.png)
 	
 	我们通过库名知道了当前库中有哪些数据表，其中我们最关系数据表 wp_users
-	![wp_users](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_38_51.png)
+	![wp_users](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_09_38_51.png)
 	
 	如果是第一次渗透 wordpress 站点，不知道表名的重要性。我们可以使用 Google 搜索 WordPress 有哪些表。如果开源 CMS 搜不到，那么就下载它的源码。通过代码审计，查找目标数据表。
 
 5. 探索 wp_users 数据表字段值
 	这一步，笔者借助搜索引擎来实现。原因是语句中，站点对于 _'_ 进行转义过滤成 _///'_ 。笔者没有想到具体的解决思路。但是 wordpress 这样知名的站点，它的数据表字段还是很好获取的。
 	 
-	 ![data table fields](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_10_04_32.png)
+	 ![data table fields](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-23_10_04_32.png)
 	
 	 最终获得字段名。
 
@@ -204,7 +204,7 @@ http://192.168.2.42/Hackademic_RTB1/cat=2%20union%20select%201,group_concat(user
 
 ```
 
-![passwd hash](vulnhubScreenShot/Hackademic.RTB1/20260724220220.png)
+![passwd hash](../vulnhubScreenShot/Hackademic.RTB1/20260724220220.png)
 
 破解后的密码口令
 
@@ -229,28 +229,28 @@ MaxBucky:50484c19f1afdaf3841a0d821ed393d2(kernel)
 2. 插件可编辑功能处写 WEBSHELL
 	这里的 Plugin Editor 功能可以让用户对插件代码进行自定义的修改。我们可以插入自己的WEBSHELL 让站点运行。 
 	
-	![edit](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_11_10.png)
+	![edit](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_11_10.png)
 	 
 	这里有 markdown.php , hello.php , textile.php 三个界面。但是只有textile.php界面给了权限修改代码。
 	
-	![edited](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_20.png)
+	![edited](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_20.png)
 	
-	![php](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_35.png)
+	![php](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_12_35.png)
 	
 	拿到会话。
-	![session](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_13_13.png)
+	![session](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_13_13.png)
 
 
 # 权限提升
 
  - 脏牛漏洞提权
-	 ![DirtyCow](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_58_14.png)
+	 ![DirtyCow](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_02_58_14.png)
 	
-	![res](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_02_41.png)
+	![res](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_02_41.png)
 	 成功获得 root 权限。
 
 # 结果
-![loot](vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_04_18.png)
+![loot](../vulnhubScreenShot/Hackademic.RTB1/Screenshot_2026-07-24_03_04_18.png)
 
 
 # 总结
@@ -261,14 +261,14 @@ MaxBucky:50484c19f1afdaf3841a0d821ed393d2(kernel)
 1. 对于一些比较知名的 CMS或者blog 框架。网上有许多开源信息可以直接获取。不需要一板一眼的使用注入漏洞查表名。
 2. WordPress 的 wp_users 表中凭借 user_status 来判断用户的权限。用户权限越高，数字越大。
 3. WordPress 站点后台除了从插件编辑页面下手，还可以 点击 options 新增上穿页面类型 php。然后再上传一个 WEBSHELL。
-	![options](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-26-19.png)
+	![options](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-26-19.png)
 	
-	![upload](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-31-04.png)
+	![upload](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-31-04.png)
 	
-	![shell](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-57.png)
+	![shell](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-57.png)
 	
 	
-	![session](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-45.png)
+	![session](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-30-45.png)
 
 5. 使用hashcat 碰撞 HASH 值
 	```shell
@@ -276,7 +276,7 @@ MaxBucky:50484c19f1afdaf3841a0d821ed393d2(kernel)
 	```
 
 
-	![hashcat](vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-14-04.png)
+	![hashcat](../vulnhubScreenShot/Hackademic.RTB1/kali-linux-2026.1-vmware-amd64-2026-07-25-14-14-04.png)
 
 6. php反弹shell
 

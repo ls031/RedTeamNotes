@@ -1,6 +1,6 @@
 ### 靶机描述
 _这是vulnhub一台中级级别的靶机。设计者要求我们拿下靶机的root权限并且获得/root目录下flag.txt文件。_
-![靶机描述](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_04_25_40.png)
+![靶机描述](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_04_25_40.png)
 下载地址：
 ```text
 https://download.vulnhub.com/w1r3s/w1r3s.v1.0.1.zip
@@ -73,7 +73,7 @@ MAC Address: 00:0C:29:D2:6E:26 (VMware)
 ```
 _(为什么使用udp扫描？这是考虑到网络协议中某些协议会使用一个端口使用两种传输层协议。比如DNS的53端口，一般情况下使用udp，特定情况下，比如axfr功能就会使用TCP进行区域传输。所以使用udp扫描非常有必要。)_
 目前确认目标逐渐开放21，22，80，3306端口。也就是ftp，ssh，http，mysql这些服务。我想进一步知道详细版本信息。
-![详细扫描](vulnhubScreenShot/w1r3s/2026-07-17-051415_2560x1600_scrot.png)
+![详细扫描](../vulnhubScreenShot/w1r3s/2026-07-17-051415_2560x1600_scrot.png)
 这里可以看到目标的ftp服务支持匿名登录，并且暴露了一些文件。这里-sC是指定使用默认脚本扫描。如果当前运行的服务有nday或者说配置错误，我们就可能拿到立足点。所以为了获取这些"低摘的果子"，我们运行漏洞脚本扫描。
 ```text
 # Nmap 7.98 scan initiated Thu Jul 16 03:48:51 2026 as: /usr/lib/nmap/nmap --script=vuln -p21,22,80,3306 -oA vulnga 192.168.2.34
@@ -113,9 +113,9 @@ MAC Address: 00:0C:29:D2:6E:26 (VMware)
 
 ### web渗透
 发现一个登录页面，编个用户进行登录
-![wp站点](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-17-32-15.png)
+![wp站点](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-17-32-15.png)
 点击登录后发现
-![无法访问](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-17-32-55.png)
+![无法访问](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-17-32-55.png)
 发现服务器不响应。访问页面源代码看一下具体原因
 ![原因检查](kali-linux-2026.1-vmware-amd64-2026-07-17-17-48-46.png)
 发现表单提交给http://localhost/wordpress/wp-login.php这个url。localhost是本地主机的意思，怪不得没返回呢。这里我猜测的原因是站长进行网站迁移，wordpress站点可能被拿掉，从而运行新的网站。而这个wp-login.php则是原始测试环境所遗留的。但是站长忘记删除这个原本自带的文件了。也有可能没有被拿掉，只是资源路径我并不知道。_(这里的表单资源提交给localhost的操作很符合这一行为)_ 
@@ -241,58 +241,58 @@ END_TIME: Thu Jul 16 03:54:30 2026
 DOWNLOADED: 78404 - FOUND: 22
 ```
 许多空白页面而且没有标准性图片。给人一种“匆忙删除网站，并且很粗心留了很多原始配置文件”。
-![错误](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-20.png)
-![泄露路径](vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_18_14.png)
+![错误](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-20.png)
+![泄露路径](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_18_14.png)
 查看robots.txt内容。robots是爬虫的”君子协议“。里面记录的内容是不允许搜索引擎爬虫获取的，一般都是私密，不想让别人知道的资源链接。如果按照我之前所想的，这个robots.txt文件很肯记录了新的wordpress登录站点url。可惜当我访问时，啥也没有。
-![爬虫协议](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-31.png)
+![爬虫协议](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-18-30-31.png)
 我感觉我这条路行不通，可能就是网址就是没了。但是，一个建站页面引起我的兴趣。
-![建站页面](vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_10_09.png)
+![建站页面](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-16_04_10_09.png)
 可能当前网站运行的是CuppaCMS。使用searchsploit搜索一下漏洞利用
-![漏洞利用](vulnhubScreenShot/w1r3s/2026-07-16-041325_2560x1600_scrot.png)
+![漏洞利用](../vulnhubScreenShot/w1r3s/2026-07-16-041325_2560x1600_scrot.png)
 使用-m参数将25971.txt文件拷贝到本地文件夹。这个漏洞能够包含本地文件和远程文件。根据利用文件，开始构造利用。
-![利用信息](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-46-02.png)
+![利用信息](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-46-02.png)
 漏洞利用点为“/alerts/alertConfigField.php?urlConfig=”，回顾之前目录爆破的结果，只有这个网址匹配的上。这里使用mousepad打开使用Ctrl F键查找“/alerts”
-![利用点查找](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-51-01.png)
+![利用点查找](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-51-01.png)
 构造payload
 ```text
 http://192.168.2.34:80/administrator/alerts/alertConfigField.php?urlConfig=../../../../../../../../../etc/passwd
 ```
 执行有结果，但是没有返回系统信息
-![卡住了](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-55-57.png)
+![卡住了](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-20-55-57.png)
 这里我卡住了，我尝试了构造这个利用文件的所有payload，但是服务器依旧返回这个界面。我想要放弃这条路，但是“/alerts匹配并有回显”这个迹象告诉我，服务器上真有这个漏洞文件alertConfigField.php。我看了红笔的视频后，验证了我的思路。这里文件给出了网站CMS的源代码地址，或许需要查看一下代码细节。
 #### CuppaCMS代码审计
 searchsploit给出的源码文件地址已经找不到了。借助谷歌搜索一下历史源码信息。目前没有Cuppa版本信息。但是13年的漏洞，采用php5.3。可以排除官网上面比较新的版本。我们选择下方的GitHub版本
-![Chrome](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
-![1](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
-![github](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-10-59.png)
+![Chrome](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
+![1](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-09-38.png)
+![github](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-10-59.png)
 
 只是按照利用文件，第22行不是’<?php include($_REQUEST["urlConfig"]); ?>‘
-![error](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-09.png)
-![origin](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-19-45.png)
+![error](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-09.png)
+![origin](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-19-45.png)
 
 经过简单的审计，Cuppa CMS后面修改为POST方式提交，但是还是没有修复漏洞。
-![success](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-19.png)
+![success](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-11-19.png)
 这块代码与服务器的函数特征还是比较匹配，推测这一版和服务上跑的那一版差别不大。
-![pattern](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-31-26.png)
+![pattern](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-31-26.png)
 构造payload，使用curl工具，构造POST方式提交请求
 ```text
 curl -i --data-urlencode "urlConfig=../../../../../../../../../etc/shadow" http://192.168.2.34/administrator/alerts/alertConfigField.php
 ```
-![execute](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-10.png)
-![res](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-43.png)
+![execute](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-10.png)
+![res](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-34-43.png)
 
 尝试一下远程文件读取
-![webshell](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-10.png)
+![webshell](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-10.png)
 没有任何回显.执行失败
-![executeerror](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-30.png)
+![executeerror](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-17-21-57-30.png)
 看来使用文件包含执行远程webshell这个思路行不通，还是老老实实爆破密码吧！
 ### john哈希碰撞
-![破解结果](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-06-38.png)
+![破解结果](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-06-38.png)
 w1r3s用户密码先被破解出来了，此时root用户的密码还在跑。其实包括我在内，对于liunx主机登录的密码和ssh账号登录的密码，许多人会设置成一样的。这样给了我们获得立足点的口子。
 我们登录ssh。
 ### 获得立足点
 使用破解的账号密码登录ssh,提示我们这是条正确的路线。下面考虑提权
-![stepstone](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-14-29.png)
+![stepstone](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-09-14-29.png)
 
 ### 权限提升
 通过命令
@@ -300,9 +300,9 @@ w1r3s用户密码先被破解出来了，此时root用户的密码还在跑。�
 sudo -l
 ```
 查看当前用户的环境，发现当前用户可以随意使用root用户权限做任何事情。
-![权限枚举](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-10-35.png)
+![权限枚举](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-10-35.png)
 使用sudo运行一个root的bash会话。查看root目录下的flag.txt文件，完成！
-![loot](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-14-23.png)
+![loot](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-14-23.png)
 
 ### 21端口ftp尝试
 目标21端口支持匿名用户登录。我们可以使用anonymous账号登录服务器下载文件。
@@ -310,14 +310,14 @@ sudo -l
 man ftp
 ```
 看了一下ftp工具手册，得到open参数用于建立远程文件服务器的链接。
-![ftp1](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_46_03.png)
-![ftp2](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_45_24.png)
+![ftp1](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_46_03.png)
+![ftp2](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_45_24.png)
 得到开放文件信息
-![inf](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-26-22.png)
+![inf](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-26-22.png)
 第一串字符使用工具识别后为MD5，第二串字符很像是base64编码。_(后面出现标志性\=\=, )_
 从网站上破解MD5字符串。
-![crack](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_04_24_37.png)
-![crack2](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-33-02.png)
+![crack](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_04_24_37.png)
+![crack2](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-33-02.png)
 我获得到的信息如下
 ```
 This is not a password(这个不是密码。)
@@ -325,13 +325,13 @@ It is easy, but not that easy..(很简单，但是没那么简单..)
 ```
 暗示我们这条路不通。
 看一下其他两个文件
-![text](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-38-01.png)
+![text](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-38-01.png)
 第一个employee_name文件给出了员工名，而下面两行字符明显颠倒了。这里采用一些工具还原字符。
 使用google搜索
-![page1](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_14.png)
+![page1](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_14.png)
 不好用。换一个
-![page2](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_02.png)
-![page3](vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_40_39.png)
+![page2](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_41_02.png)
+![page3](../vulnhubScreenShot/w1r3s/Screenshot_2026-07-17_03_40_39.png)
 我获得信息如下
 ```text
 I don't think is the way to root!(我不认为这能root)
@@ -341,9 +341,9 @@ we have lot of work to do stop playing around...(我们还有很多要完成的�
 
 ### 22端口ssh暴力破解
 不到万不得已，ssh破解的优先级应该是最后的。这里我们构造字典，使用hydra进行暴力破解。
-![zone](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-05-28.png)
+![zone](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-05-28.png)
 使用hydra的期间多次调整字典
-![hydra](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-17-49.png)
+![hydra](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-14-17-49.png)
 完成。
 
 ### 反思和学习
@@ -361,12 +361,12 @@ we have lot of work to do stop playing around...(我们还有很多要完成的�
    原理和这条命令很相像。-sn也可以替换为其他参数，--send-ip将会发送icmp时间戳请求包，而不发送arp请求包。结合nmap文档搭配，有较大的概率过防火墙。
 - **3** 在进行端口扫描时，巧用参数设置简化端口输入
   在第三号将命令执行的结果作为参数，然后-p选项写$参数，按tab按键就可以补全执行。这个扫描是整个nmap过程中最重的一次，也是最重要的一次。
-   ![operator](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-16-54-28.png)
+   ![operator](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-16-54-28.png)
    
 - **4** 实际上还要进行ipv6的扫描，这里并没有执行这个操作。
 - **5** 最后最好展示主机名，ip地址等信息来显示成果。
 - **6** 权限讲解
-   ![权限枚举](vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-10-35.png)
+   ![权限枚举](../vulnhubScreenShot/w1r3s/kali-linux-2026.1-vmware-amd64-2026-07-18-13-10-35.png)
 这里的env_reset表示执行 sudo 时重置环境变量，防止普通用户通过劫持环境变量提权。下方三个ALL，第一个表示可以切换到任意用户，第二个表示可以切换到任意组，第二个表示可以执行任意命令。
 
 ### 总结

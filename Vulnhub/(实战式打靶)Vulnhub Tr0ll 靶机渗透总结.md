@@ -130,7 +130,7 @@ MAC Address: 00:0C:29:90:D9:B4 (VMware)
 
 - 通过匿名登录 FTP 服务器，发现目标上有一个名为 lol.pcap 的文件。根据后缀名来判断，这是一个流量包文件。考虑到流量包文件也是有字符构成。因此我们可以使用 linux 自带的 strings 工具来查看字符信息。
 
-![ftp](vulnhubScreenShot/Tr0ll-1/2026-07-25-051516_2560x1600_scrot.png)
+![ftp](../vulnhubScreenShot/Tr0ll-1/2026-07-25-051516_2560x1600_scrot.png)
 
 ```text
 Well, well, well, aren't you just a clever little devil, you almost found the sup3rs3cr3tdirlol :-P
@@ -146,7 +146,7 @@ Sucks, you were so close... gotta TRY HARDER!
 
 登录网站发现只有一张图片。
 
-![hacker](vulnhubScreenShot/Tr0ll-1/hacker.jpg)
+![hacker](../vulnhubScreenShot/Tr0ll-1/hacker.jpg)
 
 这是标准的 Troll face。配上略有挑衅的话语。“你好，黑客，有问题吗？”
 
@@ -154,11 +154,11 @@ Sucks, you were so close... gotta TRY HARDER!
 
 进入网站目录，发现另一张 "Troll face"。
 
-![troll](vulnhubScreenShot/Tr0ll-1/troll.jpg)
+![troll](../vulnhubScreenShot/Tr0ll-1/troll.jpg)
 
 图片配文“你生气吗？” 到这里开始，笔者卡顿了一会。突然想到前面有个 leetspeak 编写的字符串。这个字符串是不是就是网站的隐藏目录呢？尝试一下，确实可行。
 
-![test](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-13-30-38.png)
+![test](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-13-30-38.png)
 
 网站目录中暴露了一个名叫 "roflmao" 的文件。
 先用 file 工具命令确认一下文件类型。发现是一个 ELF 可执行文件。在使用 strings 工具查看一下当前文件中有那些可疑字符串。
@@ -170,11 +170,11 @@ Find address 0x0856BF to proceed(找到地址 0x0856BF 继续)
 
 这串字符串，我的理解是文件存在二进制漏洞或者二进制信息。就是 0x0856BF 就是内存空间地址。这里我使用工具 ghidra 打开文件。
 
-![ghidra](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-13-56-23.png)
+![ghidra](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-13-56-23.png)
 
 结果发现 0x0856BF 并不是文件的偏移地址。这里可执行文件的反汇编结果展示，这个文件仅仅只有打印这串字符串的功能。会不会这串字符串也是某个特殊的网站路径？
 
-![address](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-00-54.png)
+![address](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-00-54.png)
 
 经过翻查 good_luck 文件夹下存放的是这个 which_one_lol.txt 文件。
 
@@ -203,34 +203,34 @@ Good_job_:)
 
 在尝试的过程中，笔者发现目标对 ssh 登录次数有一定的限制。如果登录尝试过于频繁，就会把 22 端口关闭。过一会后，开放。
 
-![hydra](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-14-49.png)
+![hydra](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-14-49.png)
 
 hydra 报错没法连接目标 22 端口。换个工具 netexec ,也是跑到一半，发现端口关闭了。
 
-![netexec](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-16-59.png)
+![netexec](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-16-59.png)
 
 没办法，还好账户不是很多，我只能手工测试，但是发现没有一个用户和密码能够匹配的上。我仔细翻看一下目录，this_folder_contains_the_password 表示文件夹下就有密码。难道这个Pass.txt文件名也是可喷洒密码字符串？重新修改Pass.txt。使用hydra尝试了一下。
 
-![hydra2](vulnhubScreenShot/Tr0ll-1/2026-07-25-063934_2560x1600_scrot.png)
+![hydra2](../vulnhubScreenShot/Tr0ll-1/2026-07-25-063934_2560x1600_scrot.png)
 
-![netexec](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-27-31.png)
+![netexec](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-27-31.png)
 
 获得登陆凭据。
 
 笔者在网上搜索了 “roflmao” 这个词的含义。其实是 Rolling On The Floor Laughing My Ass Off 这句话的简写。联想到之前那两个 Tr0ll face 的表情，感觉作者挺抽象的。
 
-![roflmao](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-31-51.png)
+![roflmao](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-14-31-51.png)
 
 
 # 权限提升
 
 登录用户 overflow
 
-![ssh](vulnhubScreenShot/Tr0ll-1/Screenshot_2026-07-25_06_49_12.png)
+![ssh](../vulnhubScreenShot/Tr0ll-1/Screenshot_2026-07-25_06_49_12.png)
 
 发现用户登录会话是有时间限制的。
 
-![crontab](vulnhubScreenShot/Tr0ll-1/2026-07-25-065017_2560x1600_scrot.png)
+![crontab](../vulnhubScreenShot/Tr0ll-1/2026-07-25-065017_2560x1600_scrot.png)
 
 信息显示这是从 root 用户发来的。"时间到了 LOL!" 那么说明目标有一个程序以root权限运行，每次都会检查当前登录用户的会话时间。超时了就断开连接。和时间有关，又是自动执行。我能想到的是计划任务。
 虽然 /etc/crontab 我们没有权限访问。但是/var/log/cronlog 文件我们可以看到执行的定时任务。
@@ -242,9 +242,9 @@ find / -name cleaner.py 2>/dev/null
 ls -liah /lib/log/cleaner.py
 ```
 
-![cronlog](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-17-04-28.png)
+![cronlog](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-17-04-28.png)
 
-![cleaner](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-17-05-34.png)
+![cleaner](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-17-05-34.png)
 
 这个 /lib/log/cleaner.py 脚本我们拥有编辑权限。使用 vim 在 os.system() 这个函数里面写入命令。
 
@@ -252,11 +252,11 @@ ls -liah /lib/log/cleaner.py
 echo "overflow ALL=(ALL)NOPASSWD: ALL" >> /etc/sudoers
 ```
 
-![sudo](vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-12-50-33.png)
+![sudo](../vulnhubScreenShot/Tr0ll-1/kali-linux-2026.1-vmware-amd64-2026-07-26-12-50-33.png)
 
 最后执行命令，活动/root文件夹下面的 proof.txt 文件。
 
-![success](vulnhubScreenShot/Tr0ll-1/Screenshot_2026-07-26_00_57_50.png)
+![success](../vulnhubScreenShot/Tr0ll-1/Screenshot_2026-07-26_00_57_50.png)
 
 
 # 总结
