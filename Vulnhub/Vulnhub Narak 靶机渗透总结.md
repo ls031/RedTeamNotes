@@ -110,7 +110,7 @@ MAC Address: 00:0C:29:B3:F2:59 (VMware)
 
 ![narak](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819092557044.png)
 
-![about](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819092951442.png)
+![about](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819092951442.png)
 
 没有太多可以利用的地方。我们随即进行网站目录爆破。我们发现有一个 tips.txt 的文件。
 
@@ -132,11 +132,11 @@ MAC Address: 00:0C:29:B3:F2:59 (VMware)
 tftp 10.10.10.119
 ```
 
-![webdav](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819094508338.png)
+![webdav](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819094508338.png)
 
 我们获得了 yamdoot:Swarg 这个凭据，发现这不是 ssh 的凭据。那就只有可能是 Webdav 服务的凭据。我们先使用 davtest 工具看是否能上传运行脚本文件。
 
-![login](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819095818607.png)
+![login](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819095818607.png)
 
 通过 cadaver 工具，我们与 Webdav 服务进行交互。上传我们的 php 木马。
 
@@ -172,4 +172,4 @@ find / -writable ! -path "/proc/*" ! -path "/sys/*" 2>/dev/null
 
 ![user](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101752094.png)
 
-![](vulnhubScreenShot/Vulnhub%20Narak%20靶机渗透总结/IMG-20260819120347600.png)
+![test](../vulnhubScreenShot/Vulnhub%20Narak%20靶机渗透总结/IMG-20260819120347600.png)
