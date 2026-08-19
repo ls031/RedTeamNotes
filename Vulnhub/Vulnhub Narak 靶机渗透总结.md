@@ -172,4 +172,39 @@ find / -writable ! -path "/proc/*" ! -path "/sys/*" 2>/dev/null
 
 ![user](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101752094.png)
 
-![test](../vulnhubScreenShot/Vulnhub%20Narak%20靶机渗透总结/IMG-20260819120347600.png)
+# 权限提升
+
+获得高权限立足点后，我们搜索可以被我们当前用户写的文件。因为无论是定时任务还是 suid 权限劫持。都需要我们具有写权限。如果我们可写的文件能被操作系统以一个 root 权限意外运行，我们就可以实现提权。
+我们发现搜集结果中有个 motd 服务我们很感兴趣。
+
+![motd](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819121556447.png)
+
+经过 Google 搜索，Motd 其实就是 Message of the day 的缩写。这个服务能够给第一次登录系统的用户，提供系统变更信息，或者欢迎语。这个服务面向全体用户。
+既然面向所有用户，那么执行权限想必非常高，很可能是 root。这是一个值得学习的攻击点。
+
+![p1](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819122952071.png)
+
+![dictory](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819122926006.png)
+ 通过 debian 社区关于 motd 的描述，我们知道 /etc/update-motd.d 是存放运行脚本的地方。
+ 我们对这些脚本文件都具有写权限。这里使用 00-header 这个文件。
+
+![p2](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819123618109.png)
+
+我们使用 msfvenom 生成一个反弹 bash 命令。
+![p3](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819123719326.png)
+
+写入 00-header 文件。
+![p4](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819123759271.png)
+
+做好监听，成功获得 root shell
+![p5](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819123841788.png)
+
+查看 root 目录下的文件。
+
+![root](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819123920457.png)
+
+
+# 总结
+
+我们通过端口扫描，发现目标开发了 22，80 端口。在渗透 WEB 时，发现找不到提升的 creds.txt 文件。过程陷入僵局。经过信息整理，发现了我们忽略的端口 69。成功拿到 creds 文件凭据登录 webdav，上传 php 脚本，获得 web 立足点。在权限枚举的过程中，我们发现经过 brainfuck 编码后的 inferno 用户的 ssh 口令。登录 ssh，发现 motd 服务。想到 motd 会向所有用户发信息的特性，我们在 motd 的脚本目录，发现利用点。写入我们自己的提权指令。获得 root 绘画。
+打完这个靶机，我们千万不要忽略 UDP 扫描后的结果。对于提权，可以从寻找写权限的文件入手。如何一个服务能够辐射大部分用户，那么它的权限一定非常符合我们的需求，可以寻找突破口。
