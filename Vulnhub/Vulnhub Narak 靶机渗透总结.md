@@ -3,7 +3,7 @@
 
 _这是一台标榜难度为简单的开源靶机。这是一台以印度宗教为主题的靶机。作者在描述中告诉我们，有两个 flag 等待我们获取。我们需要使用枚举的方式去逃离"地狱"。_
 
-![des](IMG-20260819090455034.png)
+![des](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819090455034.png)
 
 # 信息收集
 
@@ -108,21 +108,22 @@ MAC Address: 00:0C:29:B3:F2:59 (VMware)
 
 打开后发现，是一项描述印度宗教的素材图片。根据网站给出的信息，这个 narak 是一个类似地狱的地方。而 yama 则是 28 个神明里面的死神。里面的 yamdoot 是死神的信使。我们仅从网站中了解到这么多信息。
 
-![](IMG-20260819092557044.png)
+![narak](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819092557044.png)
 
-![](IMG-20260819092951442.png)
+![about](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819092951442.png)
 
 没有太多可以利用的地方。我们随即进行网站目录爆破。我们发现有一个 tips.txt 的文件。
 
-![](IMG-20260819093154679.png)
+![exploit](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819093154679.png)
+
 
 里面暗示我们要打开地狱之门，首先要找到 creds.txt 这样的文件。里面可能存在登录凭据。Webdav 我们没有凭据，没法直接登录。剩下的可能就是从网站给出的图片入手，查看是否存在隐写信息。
 
-![](IMG-20260819093307120.png)
+![creds](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819093307120.png)
 
 一共 20 张图片。我都下载到本地。使用 exiftool 和 binwalk 工具。都没有发现隐写信息。渗透陷入了僵局。
 
-![](IMG-20260819093902987.png)
+![picture](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819093902987.png)
 
 其实，前边端口扫描中，我们忽略了一个有价值的端口。就是 69 端口。运行 tftp 服务。这个服务有个特点，就是不能列举所有当前存在的文件。用户需要知道文件名才能获取。这个服务运行在大多物联网设备。也包括虚拟机和物理机的文件读取功能块。这个服务设计的目的就是为了方便稳定读取。我们这边猜测是否，creds.txt 文件就存储在这个 tftp 服务中。
 使用这条命令就可以登录 tftp 服务。
@@ -131,21 +132,21 @@ MAC Address: 00:0C:29:B3:F2:59 (VMware)
 tftp 10.10.10.119
 ```
 
-![](IMG-20260819094508338.png)
+![webdav](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819094508338.png)
 
 我们获得了 yamdoot:Swarg 这个凭据，发现这不是 ssh 的凭据。那就只有可能是 Webdav 服务的凭据。我们先使用 davtest 工具看是否能上传运行脚本文件。
 
-![](IMG-20260819095818607.png)
+![login](vulnhubScreenShot/Vulnhub/Narak/IMG-20260819095818607.png)
 
 通过 cadaver 工具，我们与 Webdav 服务进行交互。上传我们的 php 木马。
 
-![](IMG-20260819100021981.png)
+![cadaver](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819100021981.png)
 
-![](IMG-20260819100054664.png)
+![web-directory](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819100054664.png)
 
 在 web 端触发我们的 1.php 脚本。拿到 www-data 的权限立足点。
 
-![](IMG-20260819100300905.png)
+![stepstone](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819100300905.png)
 
 # 提升立足点
 
@@ -153,21 +154,22 @@ tftp 10.10.10.119
 find / -writable ! -path "/proc/*" ! -path "/sys/*" 2>/dev/null
 ```
 
-![](IMG-20260819100713120.png)
+![find](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819100713120.png)
 
 我们发现一个 hell.sh 的脚本。
 
-![beef](IMG-20260819101212541.png)
+![beef](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101212541.png)
 
 其中有一串 brainfuck 编码。通过解密这串编码我们发现了一个口令。
 
-![](IMG-20260819101516512.png)
+![brainfuck](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101516512.png)
 
 这很可能是某个用户的登录密码。
 
-![](IMG-20260819101705832.png)
+![home](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101705832.png)
 
 经过尝试，成功登录 inferno 这个用户，获得了第一个 user.txt 的 flag。
 
-![user](IMG-20260819101752094.png)
+![user](../vulnhubScreenShot/Vulnhub/Narak/IMG-20260819101752094.png)
 
+![](vulnhubScreenShot/Vulnhub%20Narak%20靶机渗透总结/IMG-20260819120347600.png)
