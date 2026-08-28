@@ -261,3 +261,14 @@ systemd-run --shell
 # 总结
 
 这台靶机添加了 jsFuck ，morse code 等新奇的解密关卡。借助这台靶机，我们对 polkit 的机制有所了解。
+
+
+# 补充
+
+## Capabilities 缺陷利用
+
+Capabilities 简称 cap。就是把 root 用户的能力细分为各个细颗粒度的功能模块。拥有 cap 的可执行文件。普通用户执行后，可以拿到小部分只有 root 才能执行的功能。
+通过搜索目标主机，我们发现了 tar 工具具有读取和搜索的功能。CAP_DAC_READ_SEARCH 能够进行读和搜索。我们可以通过 tar 工具将 root 文件下的内容搜索出来。
+
+![cap1](../vulnhubScreenShot/Vulnhub%20Connect-The-Dot%20靶机渗透总结/IMG-20260828105050406.png)
+
