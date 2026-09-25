@@ -1,6 +1,6 @@
 {
   "alwaysUpdateLinks": true,
   "useMarkdownLinks": true,
-  "attachmentFolderPath": "vulnhubScreenShot",
+  "attachmentFolderPath": "img",
   "newLinkFormat": "absolute"
 }

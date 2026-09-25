@@ -1,6 +1,6 @@
 {
   "attachPath": {
-    "attachmentRoot": "vulnhubScreenShot",
+    "attachmentRoot": "img",
     "saveAttE": "inFolderBelow",
     "attachmentPath": "${notename}",
     "attachFormat": "IMG-${date}",
