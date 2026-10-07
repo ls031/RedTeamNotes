@@ -12,3 +12,15 @@
 
 
 
+
+
+
+密码破解
+
+```text
+sudo gunzip /usr/share/wordlists/rockyou.txt.gz
+
+john --wordlist=/usr/share/wordlists/rockyou.txt --format=Raw-MD5 creds.txt
+```
+
+
