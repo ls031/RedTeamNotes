@@ -3,7 +3,7 @@
 
 _这是一台标榜难度为简单的 vulnhub 开源靶机。作者说了这台靶机十分的基础。_
 
-![des](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930214457354.png)
+![des](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930214457354.png)
 
 
 ### 信息收集
@@ -78,21 +78,21 @@ MAC Address: 00:0C:29:A3:D0:19 (VMware)
 
 这是一个 ssh 的私钥文件。我们可以凭借这个私钥快速获取立足点。这里的 title 上写着 mpampis key。 明摆着这是 mpampis 的私钥。
 
-![p1](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930220757402.png)
+![p1](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930220757402.png)
 
 
 #### 密码爆破 兔子洞
 
 在访问 80 端口时，就发现作者提示我们少关注源码，多聚焦于真实场景。通过目录爆破，发现有个 key.php 的页面。
 
-![p2](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221021486.png)
+![p2](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221021486.png)
 
 
-![p3](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221150604.png)
+![p3](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221150604.png)
 
 我们通过 hydra 暴力破解，成功获取口令 admin，但是当前界面没有给我们下一步的提示。
 
-![p4](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221252540.png)
+![p4](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221252540.png)
 
 
 ### ssh 获取立足点
@@ -101,31 +101,31 @@ MAC Address: 00:0C:29:A3:D0:19 (VMware)
 
 我们将私钥文件保存下来直接连接 ssh 时，发现提示我们权限太开放了。我进行权限缩进 400 只能自己读取私钥。
 
-![p5](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221409635.png)
+![p5](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221409635.png)
 
 
 成功获得立足点
 
-![p6](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221711333.png)
+![p6](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221711333.png)
 
-![p7](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221841348.png)
+![p7](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221841348.png)
 ### 权限提升
 
 通过登录界面 sudo -l 权限枚举，发现我们可以用 root 权限使用 gcc 工具。
 这里构造 priv.c 是错误的思路，我们编译好的 priv 我们没法运行。
 
-![p8](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930221910420.png)
+![p8](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930221910420.png)
 
 我们通过 Google 搜索到了 gcc 的提权方法。
 
-![p9](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930222051725.png)
+![p9](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930222051725.png)
 
-![p10](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930222113705.png)
+![p10](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930222113705.png)
 
 
 成功验证 root 权限。
 
-![p11](../vulnhubScreenShot/(纯)%20NyxVM%20靶机渗透总结/IMG-20260930222144032.png)
+![p11](vulnhubScreenShot/(纯)Vulnhub%20NyxVM%20靶机渗透总结/IMG-20260930222144032.png)
 
 ### 总结
 

@@ -226,7 +226,7 @@ find / -perm -u=s -type f 2>/dev/null
 
 我们发现这里的 polkit-agent-helper-1 文件具有 suid 权限。通过查看目标 polkit 的手册，我们得知这个文件是用于给高权限与低权限程序沟通的中介人。我们平常使用 kali 通过命令 systemctl 启动某个服务时，就会弹出一个 dialog。要求我们输入 root 密码。这个 对话框就是 helper 这个软件干的事。说明目标系统上还运行这另一套安全机制 PolicyKit 。
 
-![priv1](vulnhubScreenShot/Vulnhub%20Connect-The-Dot%20靶机渗透总结/IMG-20260827205219903.png)
+![priv1](../vulnhubScreenShot/Vulnhub%20Connect-The-Dot%20靶机渗透总结/IMG-20260827205219903.png)
 
 回顾目前情况，我们手上有两个用户的凭据，但是都没有执行 sudo 的权限。感觉目标对于 sudo 权限的操作非常严格，那么会不会在 polkit 的配置上有疏漏？
 
