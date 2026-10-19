@@ -3,7 +3,7 @@
 
 _这是一台标榜难度为简单的开源靶机。  设计者鼓励测试人员用多种思路完成靶机。_    
 
-![des](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_18_48_06.png)
+![des](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260814191350062.png)
 
 # 信息收集
 
@@ -162,23 +162,23 @@ Host script results:
 
 打开后发现了这个界面
 
-![WEB1](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_23_27.png)
+![WEB1](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815162604123.png)
 点击网站栏目中的 Blog ，跳转到一个名叫 Nano CMS 的博客界面。
 
-![WEB2](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_23_35.png)
+![WEB2](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815162806025.png)
 
 点击 event 又跳转到了新的界面。
 
-![WEB3](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_23_50.png)
+![WEB3](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815163049278.png)
 
 在浏览界面的同时，我发现有个 mailing list 的链接。点击后发现了一个注册界面。由于注册功能通常是将表单的内容插入到数据库中，所以比较容易出现 SQL 注入攻击。我们这里简单试了一下，确实存在注入。
 
-![WEB4](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_24_06.png)
+![WEB4](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815163359782.png)
 
-![WEB5](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_36_24.png)
+![WEB5](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815163717033.png)
 
 
-![WEB6](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-15_16_36_34.png)
+![WEB6](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815163743083.png)
 
 由于不好找回显点，这里我们使用报错注入。
 
@@ -195,7 +195,7 @@ Host script results:
 ```
 
 结果
-![sql1](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-16-50-47.png)
+![sql1](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815165145746.png)
 
 我们感兴趣的是这个 drupal 数据库。information_schema和mysql 都是 mysql 软件的功能性数据库。而 contacts看名字像是网站样式的数据库。test 又是测试。只有 drupal 这是个 CMS 框架的名称。如果能够获得泄露的凭据信息。我们就可以登录网站后台，获得立足点。
 通过这个 payload
@@ -212,7 +212,7 @@ Host script results:
 
 结果
 
-![sql2](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-16-59-03.png)
+![sql2](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815170011446.png)
 
 这个 drupal 数据库的表看样子还是挺多的。group_concat 函数没法一次性全部列举完。那就只能使用 limit 参数一个个枚举。考虑到时间和效率这个因素。我们使用 sqlmap 来快速枚举完成。
 
@@ -220,7 +220,7 @@ Host script results:
 
 先将当前请求数据头和 POST 提交的内容放在一个文件中，然后使用 sqlmap 的 -r 参数即可启动。
 一下子我们就看到了我们最感兴趣的 user 表。
-![sql3](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_14_52_51.png)
+![sql3](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815170453979.png)
 
 也可以使用 payload
 
@@ -228,13 +228,13 @@ Host script results:
 ' AND (SELECT * FROM (SELECT NAME_CONST((SELECT group_concat(column_name) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = "users"),1),NAME_CONST((SELECT group_concat(column_name) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = "users"),1)) as x) #
 ```
 
-![sql4](../vulnhubScreenShot/lampsecurity-ctf5/20260815171150.png)
+![sql4](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815171150926.png)
 
 不过 sqlmap 给出的结果更加清晰完整。
-![sql5](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-12-21.png)
+![sql5](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815171546803.png)
 进一步获得 账号密码凭据。
 
-![sql6](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-14-49.png)
+![sql6](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815171626310.png)
 
 使用网页 hash 工具碰撞出明文密码。
 ```text
@@ -250,28 +250,28 @@ loren:6c470dd4a0901d53f7ed677828b23cfd:lorenpass
 
 这里的 patrick 用户凭据是网站后台管理员。
 
-![stepone1](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-23-03.png)
+![stepone1](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815172752969.png)
 
 我们点击这个 Administer 选项，进入其中的 Site configuration 栏目。点击其中 Input formats。
 修改其中解析属性为 php code。
 
-![stepone2](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-28-37.png)
+![stepone2](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815172937256.png)
 
 
 接下来，我们新建一个 page 内容，记得勾选 php 解析器。点击 preview。页面就会解析我们的 php 木马内容。
 
-![stepone3](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-35-07.png)
+![stepone3](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815173718897.png)
 
 可以看到成功回连。
 
-![stepone4](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-35-16.png)
+![stepone4](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815173752935.png)
 
 成功获得立足点。
 
 # 权限提升
 
 首先查看一下当前服务器有哪些用户。
-![root1](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-47-58.png)
+![root1](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815175057020.png)
 
 当前用户还是比较多的。那很有可能某个用户为了方便私藏 root 凭据。我们重点关注 /home 目录下的文件。使用 grep 命令快速匹配搜索。
 
@@ -279,39 +279,39 @@ loren:6c470dd4a0901d53f7ed677828b23cfd:lorenpass
 grep -R -i pass* /home/* 2>/dev/null
 ```
 
-![root2](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-53-38.png)
+![root2](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815175406892.png)
 
 我们发现输出中，有个 /home/patrick/.tomboy/481bca0d-7206-45dd-a459-a72ea1131329.note 提到了 root 。我们查看一下这个文件。发现了 root 用户的凭据 50$cent
 
-![root3](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-55-36.png)
+![root3](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815175649217.png)
 
 成功提权。展示一下战利品。
-![root4](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-17-55-52.png)
+![root4](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815175729125.png)
 
 
 # 补充 信息泄露凭据 RCE
 
 WEB 信息收集过程中，发现一个名叫 Nano CMS 的页面。使用 searchsploit 工具搜索利用。发现有个需要认证的 RCE 漏洞。
-![exploit1](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-18-02-03.png)
+![exploit1](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815180433547.png)
 
 我们使用 Google 搜索引擎搜索其他 exploit 脚本。使用 “NanoCMS exploit” 关键字搜索。发现了一个信息泄露的路径。
 
-![exploit2](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_18_42_49.png)
+![exploit2](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815180600649.png)
 
-![exploit3](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_18_44_07.png)
+![exploit3](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815180613526.png)
 
 发现成功泄露凭据信息。
 
-![exploit4](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_18_45_18.png)
+![exploit4](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815180653054.png)
 使用网页 hash 碰撞工具进行破解。
 
-![exploit5](../vulnhubScreenShot/lampsecurity-ctf5/Screenshot_2026-08-14_16_07_37.png)
+![exploit5](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815180717555.png)
 
 使用这个 50997.py 脚本进行上传攻击。访问界面。触发木马，拿到立足点。
 
-![exploit6](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-18-30-43.png)
+![exploit6](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815183144961.png)
 
-![exploit7](../vulnhubScreenShot/lampsecurity-ctf5/KALI2026.2-2026-08-15-18-32-19.png)
+![exploit7](vulnhubScreenShot/Vulnhub%20Lampsecurity-ctf5靶机渗透总结/IMG-20260815183243006.png)
 
 
 # 总结
